@@ -1,8 +1,8 @@
-const { response } = require("express");
+// const { response } = require("express");
 const express = require("express");
 const app = express();
 
-let notes = [
+let persons = [
   {
     name: "Arto Hellas",
     number: "040-123456",
@@ -30,17 +30,19 @@ let notes = [
   },
 ];
 
+app.use(express.json())
+
 app.get("/", (req, res) => {
   res.send("<h1>Hello World!</h1>");
 });
 
 app.get("/api/persons", (req, res) => {
-  res.json(notes);
+  res.json(persons);
 });
 
 app.get("/api/persons/:id", (req, res) => {
   const id = Number(req.params.id);
-  const note = notes.find((note) => note.id === id);
+  const note = persons.find((note) => note.id === id);
 
   if (note) {
     res.json(note);
@@ -51,15 +53,35 @@ app.get("/api/persons/:id", (req, res) => {
 
 app.delete("/api/persons/:id", (req, res) => {
   const id = Number(req.params.id);
-  notes = notes.filter((note) => note.id !== id);
+  persons = persons.filter((note) => note.id !== id);
 
   res.status(204).end();
 });
 
 app.get("/info", (req, res) => {
-  let num = notes.length;
+  let num = persons.length;
   res.send(`<p>Phonebook has info for ${num} people</p>` + Date());
 });
+
+
+app.post('/api/persons', (req,res)=> {
+  getRandomInt = (max) =>  Math.floor(Math.random() * Math.floor(max));
+  let ids = persons.map(person=>person.id)
+  let tempId = 1;
+
+  while (ids.includes(tempId)) {
+    tempId = getRandomInt(10000)
+  }
+
+  const person = req.body
+  person.id = tempId
+
+  console.log('person',person)
+  persons = [...persons,person];
+
+  console.log(persons)
+  res.json(persons)
+})
 
 const PORT = 3001;
 app.listen(PORT, () => {
