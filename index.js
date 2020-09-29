@@ -28,8 +28,20 @@ app.get('/', (req, res) => {
   res.send('<h1>Hello World!</h1>')
 })
 
+
 app.get('/api/persons', (req, res) => {
   res.json(notes)
+})
+
+app.get('/api/persons/:id',(req,res)=>{
+  const id = Number(req.params.id)
+  const note = notes.find(note=> note.id === id)
+
+  if (note){
+    res.json(note)
+  } else{
+    res.status(404).end()
+  }
 })
 
 app.get('/info',(req,res)=>{
