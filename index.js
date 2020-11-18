@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const morgan = require("morgan");
-const cors = require('cors')
+const cors = require("cors");
 
 let persons = [
   {
@@ -32,7 +32,7 @@ let persons = [
 ];
 
 const requestLogger = (request, response, next) => {
-  console.log('--- Custom Middleware ---')
+  console.log("--- Custom Middleware ---");
   console.log("Method:", request.method);
   console.log("Path: ", request.path);
   console.log("Body: ", request.body);
@@ -40,13 +40,15 @@ const requestLogger = (request, response, next) => {
   next();
 };
 
-app.use(express.static('build'))
-app.use(cors())
+app.use(express.static("build"));
+app.use(cors());
 app.use(express.json());
 app.use(requestLogger);
-morgan.token('body', (req,res) => JSON.stringify(req.body))
+morgan.token("body", (req, res) => JSON.stringify(req.body));
 // app.use(morgan('tiny'))
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
+app.use(
+  morgan(":method :url :status :res[content-length] - :response-time ms :body")
+);
 // getting incoming body as opposed to body after post route
 // app.use(morgan(":body",{ immediate: true }))
 
@@ -92,6 +94,26 @@ app.get("/info", (req, res) => {
   res.send(`<p>Phonebook has info for ${num} people</p>` + Date());
 });
 
+// front end checks if it exists
+// put route to update
+app.put("/api/persons/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const personData = req.body;
+
+  //this error messge shouldnt even come into play
+  let errorMessage = !persons.some((peep) => peep.id === id)
+    ? "Person Not Found"
+    : null;
+  if (errorMessage) {
+    return res.status(400).json({ error: errorMessage });
+  }
+
+  persons = persons.filter((note) => note.id !== id);
+  persons = [...persons, { id: id, ...personData }];
+
+  return res.json(persons);
+});
+
 app.post("/api/persons", (req, res) => {
   getRandomInt = (max) => Math.floor(Math.random() * Math.floor(max));
   let ids = persons.map((person) => person.id);
@@ -104,8 +126,7 @@ app.post("/api/persons", (req, res) => {
   }
 
   const personData = req.body;
-  const newPerson = {...personData,id: tempId}
-
+  const newPerson = { ...personData, id: tempId };
 
   const { name, number } = newPerson;
 
