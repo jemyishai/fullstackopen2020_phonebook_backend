@@ -62,8 +62,8 @@ app.get("/api/persons", (req, res, next) => {
       res.json(peeps);
     })
     .catch((err) => {
-      console.error(err)
-      next(err)
+      console.error(err);
+      next(err);
     });
 });
 
@@ -112,8 +112,8 @@ app.get("/info", (req, res, next) => {
       res.send(`<p>Phonebook has info for ${num} people</p>` + Date());
     })
     .catch((err) => {
-      console.error(err)
-      next(err)
+      console.error(err);
+      next(err);
     });
 });
 
