@@ -1,35 +1,39 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const morgan = require("morgan");
 const cors = require("cors");
+const Person = require('./models/person');
+const { response } = require("express");
 
-let persons = [
-  {
-    name: "Arto Hellas",
-    number: "040-123456",
-    id: 1,
-  },
-  {
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-    id: 2,
-  },
-  {
-    name: "Dan Abramov",
-    number: "12-43-234345",
-    id: 3,
-  },
-  {
-    name: "Mary Poppendieck",
-    number: "39-23-6423122",
-    id: 4,
-  },
-  {
-    name: "Testy McTesterson",
-    number: "39-555-6423122",
-    id: 5,
-  },
-];
+
+// let persons = [
+//   {
+//     name: "Arto Hellas",
+//     number: "040-123456",
+//     id: 1,
+//   },
+//   {
+//     name: "Ada Lovelace",
+//     number: "39-44-5323523",
+//     id: 2,
+//   },
+//   {
+//     name: "Dan Abramov",
+//     number: "12-43-234345",
+//     id: 3,
+//   },
+//   {
+//     name: "Mary Poppendieck",
+//     number: "39-23-6423122",
+//     id: 4,
+//   },
+//   {
+//     name: "Testy McTesterson",
+//     number: "39-555-6423122",
+//     id: 5,
+//   },
+// ];
 
 const requestLogger = (request, response, next) => {
   console.log("--- Custom Middleware ---");
@@ -40,113 +44,120 @@ const requestLogger = (request, response, next) => {
   next();
 };
 
-app.use(express.static("build"));
+// app.use(express.static("build"));
 app.use(cors());
 app.use(express.json());
 app.use(requestLogger);
 morgan.token("body", (req, res) => JSON.stringify(req.body));
-// app.use(morgan('tiny'))
 app.use(
   morgan(":method :url :status :res[content-length] - :response-time ms :body")
 );
-// getting incoming body as opposed to body after post route
-// app.use(morgan(":body",{ immediate: true }))
-
-// //req.body here contains id added from post route
-// app.use(morgan( (tokens, req, res) => [
-//     tokens.method(req, res),
-//     tokens.url(req, res),
-//     tokens.status(req, res),
-//     tokens.req(req, res, 'content-length'), '-',
-//     tokens['response-time'](req, res), 'ms',
-//     JSON.stringify(req['body'])
-//   ].join(' ')
-// ));
 
 app.get("/", (req, res) => {
   res.send("<h1>Hello World!</h1>");
 });
 
 app.get("/api/persons", (req, res) => {
-  res.json(persons);
+  Person.find({})
+    .then((peeps) => {
+       res.json(peeps);
+    })
+    .catch((err) => console.error(err));
 });
 
 app.get("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const note = persons.find((note) => note.id === id);
+  // const id = Number(req.params.id);
+  Person.findById(req.params.id).then(person=>{
+    res.json(person)
+  })
+  // const note = persons.find((note) => note.id === id);
 
-  if (note) {
-    res.json(note);
-  } else {
-    res.status(404).send({ error: "no such ID" }).end();
-  }
+  // if (note) {
+  //   res.json(note);
+  // } else {
+  //   res.status(404).send({ error: "no such ID" }).end();
+  // }
 });
 
-app.delete("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
-  persons = persons.filter((note) => note.id !== id);
+// app.delete("/api/persons/:id", (req, res) => {
+//   const id = Number(req.params.id);
+//   persons = persons.filter((note) => note.id !== id);
 
-  res.status(204).end();
-});
+//   res.status(204).end();
+// });
 
-app.get("/info", (req, res) => {
-  let num = persons.length;
-  res.send(`<p>Phonebook has info for ${num} people</p>` + Date());
-});
+// app.get("/info", (req, res) => {
+//   let num = persons.length;
+//   res.send(`<p>Phonebook has info for ${num} people</p>` + Date());
+// });
 
-// front end checks if it exists
-// put route to update
-app.put("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const personData = req.body;
+// // front end checks if it exists
+// // put route to update
+// app.put("/api/persons/:id", (req, res) => {
+//   const id = Number(req.params.id);
+//   const personData = req.body;
 
-  //this error messge shouldnt even come into play
-  let errorMessage = !persons.some((peep) => peep.id === id)
-    ? "Person Not Found"
-    : null;
-  if (errorMessage) {
-    return res.status(400).json({ error: errorMessage });
-  }
+//   //this error messge shouldnt even come into play
+//   let errorMessage = !persons.some((peep) => peep.id === id)
+//     ? "Person Not Found"
+//     : null;
+//   if (errorMessage) {
+//     return res.status(400).json({ error: errorMessage });
+//   }
 
-  persons = persons.filter((note) => note.id !== id);
-  persons = [...persons, { id: id, ...personData }];
+//   persons = persons.filter((note) => note.id !== id);
+//   persons = [...persons, { id: id, ...personData }];
 
-  return res.json(persons);
-});
+//   return res.json(persons);
+// });
 
 app.post("/api/persons", (req, res) => {
-  getRandomInt = (max) => Math.floor(Math.random() * Math.floor(max));
-  let ids = persons.map((person) => person.id);
-  let tempId = 1;
-  let errorMessage = "";
-  let statusCode = 400;
+  const body = req.body
 
-  while (ids.includes(tempId)) {
-    tempId = getRandomInt(10000);
+  if (!body.name ||!body.number ){
+    return res.status(400).json({error: 'content missing'})
   }
 
-  const personData = req.body;
-  const newPerson = { ...personData, id: tempId };
+  const person = new Person({
+    name: body.name,
+    number: body.number
+  })
 
-  const { name, number } = newPerson;
+  person.save().then(savedNote =>{
+    res.json(savedNote)
+  })
+  // getRandomInt = (max) => Math.floor(Math.random() * Math.floor(max));
+  // let ids = persons.map((person) => person.id);
+  // let tempId = 1;
+  // let errorMessage = "";
+  // let statusCode = 400;
 
-  if (!name && !number) {
-    errorMessage = "name and number are missing";
-  } else if (!name) {
-    errorMessage = "name is missing";
-  } else if (!number) {
-    errorMessage = "number is missing";
-  } else if (persons.some((person) => person.name === name)) {
-    errorMessage = "name already exists in the phonebook";
-    statusCode = 409;
-  }
+  // while (ids.includes(tempId)) {
+  //   tempId = getRandomInt(10000);
+  // }
 
-  if (!errorMessage) {
-    persons = [...persons, newPerson];
-    return res.json(persons);
-  } else {
-    return res.status(statusCode).json({ error: errorMessage });
-  }
+  // const personData = req.body;
+  // const newPerson = { ...personData, id: tempId };
+
+  // const { name, number } = newPerson;
+
+  // if (!name && !number) {
+  //   errorMessage = "name and number are missing";
+  // } else if (!name) {
+  //   errorMessage = "name is missing";
+  // } else if (!number) {
+  //   errorMessage = "number is missing";
+  // } else if (persons.some((person) => person.name === name)) {
+  //   errorMessage = "name already exists in the phonebook";
+  //   statusCode = 409;
+  // }
+
+  // if (!errorMessage) {
+  //   persons = [...persons, newPerson];
+  //   return res.json(persons);
+  // } else {
+  //   return res.status(statusCode).json({ error: errorMessage });
+  // }
 });
 
 const unknownEndpoint = (request, response) => {

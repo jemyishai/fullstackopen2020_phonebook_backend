@@ -12,7 +12,7 @@ const name = process.argv[3];
 const number = process.argv[4];
 
 if (password) {
-  const url = `mongodb+srv://fullstackopen:${password}@cluster0.t0jhq.mongodb.net/allTheNotes?retryWrites=true&w=majority`;
+  const url = `mongodb+srv://fullstackopen:${password}@cluster0.t0jhq.mongodb.net/phonebook?retryWrites=true&w=majority`;
   mongoose.connect(url, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
