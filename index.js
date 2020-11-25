@@ -56,12 +56,15 @@ app.get("/", (req, res) => {
   res.send("<h1>Hello World!</h1>");
 });
 
-app.get("/api/persons", (req, res) => {
+app.get("/api/persons", (req, res, next) => {
   Person.find({})
     .then((peeps) => {
       res.json(peeps);
     })
-    .catch((err) => console.error(err));
+    .catch((err) => {
+      console.error(err)
+      next(err)
+    });
 });
 
 app.get("/api/persons/:id", (req, res, next) => {
@@ -72,12 +75,12 @@ app.get("/api/persons/:id", (req, res, next) => {
         res.json(person);
       }
       //doesnt this prevent the .catch from catching the error
-        else{
-          res.status(404).end()
-        }
+      else {
+        res.status(404).end();
+      }
     })
     .catch((err) => {
-      next(err)
+      next(err);
       // console.log(err);
       // res.status(400).send({error:'malformed id'});
     });
@@ -92,20 +95,27 @@ app.get("/api/persons/:id", (req, res, next) => {
 
 app.delete("/api/persons/:id", (req, res, next) => {
   Person.findByIdAndRemove(req.params.id)
-  .then(res =>{
-    res.status(204).end()
-  })
-  .catch(err=>next(err))
+    .then((res) => {
+      res.status(204).end();
+    })
+    .catch((err) => next(err));
   // const id = Number(req.params.id);
   // persons = persons.filter((note) => note.id !== id);
 
   // res.status(204).end();
 });
 
-// app.get("/info", (req, res) => {
-//   let num = persons.length;
-//   res.send(`<p>Phonebook has info for ${num} people</p>` + Date());
-// });
+app.get("/info", (req, res, next) => {
+  Person.find({})
+    .then((peeps) => {
+      let num = peeps.length;
+      res.send(`<p>Phonebook has info for ${num} people</p>` + Date());
+    })
+    .catch((err) => {
+      console.error(err)
+      next(err)
+    });
+});
 
 // front end checks if it exists
 // put route to update
@@ -114,18 +124,18 @@ app.put("/api/persons/:id", (req, res, next) => {
 
   const person = {
     name: body.name,
-    number: body.number
-  }
+    number: body.number,
+  };
 
-  Person.findByIdAndUpdate(req.params.id, person, {new:true})
-    .then(updatedPeep => {
-      res.json(updatedPeep)
+  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    .then((updatedPeep) => {
+      res.json(updatedPeep);
     })
-    .catch(err=>next(err))
+    .catch((err) => next(err));
   // const id = Number(req.params.id);
   // const personData = req.body;
 
- // // this error messge shouldnt even come into play
+  // // this error messge shouldnt even come into play
   // let errorMessage = !persons.some((peep) => peep.id === id)
   //   ? "Person Not Found"
   //   : null;
@@ -194,16 +204,16 @@ const unknownEndpoint = (request, response) => {
 
 app.use(unknownEndpoint);
 
-const errorHandler = (error, request, response, next) =>{
-  console.error(error.message)
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
 
-  if (error.name === 'CastError'){
-    return response.status(400).send({error: 'malformatted id'})
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" });
   }
-  next(error)
-}
+  next(error);
+};
 
-app.use(errorHandler)
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
