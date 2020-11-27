@@ -1,134 +1,134 @@
-require("dotenv").config();
-const express = require("express");
-const app = express();
-const morgan = require("morgan");
-const cors = require("cors");
-const Person = require("./models/person");
-const { response } = require("express");
+require('dotenv').config()
+const express = require('express')
+const app = express()
+const morgan = require('morgan')
+const cors = require('cors')
+const Person = require('./models/person')
 
 const requestLogger = (request, response, next) => {
-  console.log("--- Custom Middleware ---");
-  console.log("Method:", request.method);
-  console.log("Path: ", request.path);
-  console.log("Body: ", request.body);
-  console.log("---");
-  next();
-};
+  console.log('--- Custom Middleware ---')
+  console.log('Method:', request.method)
+  console.log('Path: ', request.path)
+  console.log('Body: ', request.body)
+  console.log('---')
+  next()
+}
 
-app.use(express.static("build"));
-app.use(cors());
-app.use(express.json());
-app.use(requestLogger);
-morgan.token("body", (req, res) => JSON.stringify(req.body));
+app.use(express.static('build'))
+app.use(cors())
+app.use(express.json())
+app.use(requestLogger)
+morgan.token('body', (req) => JSON.stringify(req.body))
 app.use(
-  morgan(":method :url :status :res[content-length] - :response-time ms :body")
-);
+  morgan(':method :url :status :res[content-length] - :response-time ms :body')
+)
 
-app.get("/", (req, res) => {
-  res.send("<h1>Hello World!</h1>");
-});
+app.get('/', (req, res) => {
+  res.send('<h1>Hello World!</h1>')
+})
 
-app.get("/api/persons", (req, res, next) => {
+app.get('/api/persons', (req, res, next) => {
   Person.find({})
     .then((peeps) => {
-      res.json(peeps);
+      res.json(peeps)
     })
     .catch((err) => {
-      console.error(err);
-      next(err);
-    });
-});
+      console.error(err)
+      next(err)
+    })
+})
 
-app.get("/api/persons/:id", (req, res, next) => {
+app.get('/api/persons/:id', (req, res, next) => {
   Person.findById(req.params.id)
     .then((person) => {
       if (person) {
-        res.json(person);
+        res.json(person)
       }
       //doesnt this prevent the .catch from catching the error ??
       else {
-        res.status(404).end();
+        res.status(404).end()
       }
     })
     .catch((err) => {
-      next(err);
-    });
-});
-
-app.delete("/api/persons/:id", (req, res, next) => {
-  Person.findByIdAndRemove(req.params.id)
-    .then((response) => {
-      res.status(204).end();
+      next(err)
     })
-    .catch((err) => next(err));
-});
+})
 
-app.get("/info", (req, res, next) => {
+app.delete('/api/persons/:id', (req, res, next) => {
+  Person.findByIdAndRemove(req.params.id)
+    .then((res) => {
+      res.status(204).end()
+    })
+    .catch((err) => next(err))
+})
+
+app.get('/info', (req, res, next) => {
   Person.find({})
     .then((peeps) => {
-      let num = peeps.length;
-      res.send(`<p>Phonebook has info for ${num} people</p>` + Date());
+      let num = peeps.length
+      res.send(`<p>Phonebook has info for ${num} people</p>` + Date())
     })
     .catch((err) => {
-      console.error(err);
-      next(err);
-    });
-});
+      console.error(err)
+      next(err)
+    })
+})
 
 // front end checks if it exists
 // put route to update
-app.put("/api/persons/:id", (req, res, next) => {
-  const body = req.body;
 
-  const person = {
-    name: body.name,
-    number: body.number,
-  };
 
-  Person.findByIdAndUpdate(req.params.id, person, { new: true, runValidators: true })
+app.put('/api/persons/:id', (req, res, next) => {
+  console.log(typeof req.params.id)
+  console.log(req.params.id)
+  const { number } = req.body
+  Person.findByIdAndUpdate(req.params.id, { number }, {
+    new: true,
+    runValidators: true,
+  })
     .then((updatedPeep) => {
-      res.json(updatedPeep);
+      res.json(updatedPeep)
     })
-    .catch((err) => next(err));
-});
+    .catch((err) => next(err))
+})
 
-app.post("/api/persons", (req, res, next) => {
-  const body = req.body;
+app.post('/api/persons', (req, res, next) => {
+  const body = req.body
 
   const person = new Person({
     name: body.name,
     number: body.number,
-  });
+  })
 
   person
     .save()
     .then((savedPerson) => savedPerson.toJSON())
     .then((savedAndFormattedPerson) => {
-      res.json(savedAndFormattedPerson);
+      res.json(savedAndFormattedPerson)
     })
-    .catch((err) => next(err));
-});
+    .catch((err) => next(err))
+})
 
 const unknownEndpoint = (request, response) => {
-  response.status(404).send({ error: "unknown endpoint" });
-};
+  response.status(404).send({ error: 'unknown endpoint' })
+}
 
-app.use(unknownEndpoint);
+app.use(unknownEndpoint)
 
 const errorHandler = (error, request, response, next) => {
-  console.error(error.message);
+  console.error(error.message)
 
-  if (error.name === "CastError") {
-    return response.status(400).send({ error: "malformatted id" });
-  } else if (error.name === "ValidationError") {
-    return response.status(400).json({ error: error.message });
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
   }
-  next(error);
-};
+  next(error)
+}
 
-app.use(errorHandler);
+app.use(errorHandler)
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+  console.log(`Server running on port ${PORT}`)
+})

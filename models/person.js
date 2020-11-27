@@ -1,7 +1,7 @@
-require("dotenv").config();
-const mongoose = require("mongoose");
-var uniqueValidator = require('mongoose-unique-validator');
-const url = process.env.MONGODB_URI;
+require('dotenv').config()
+const mongoose = require('mongoose')
+var uniqueValidator = require('mongoose-unique-validator')
+const url = process.env.MONGODB_URI
 
 mongoose.connect(url, {
   useNewUrlParser: true,
@@ -11,9 +11,9 @@ mongoose.connect(url, {
 }).then(result => {
   console.log('connected to MongoDB')
 })
-.catch((error) => {
-  console.log('error connecting to MongoDB:', error.message)
-});
+  .catch((error) => {
+    console.log('error connecting to MongoDB:', error.message)
+  })
 
 const personSchema = new mongoose.Schema({
   name: {
@@ -27,7 +27,7 @@ const personSchema = new mongoose.Schema({
     minlength: 8,
     required: true
   }
-});
+})
 
 personSchema.plugin(uniqueValidator)
 
@@ -39,4 +39,4 @@ personSchema.set('toJSON', {
   }
 })
 
-module.exports = mongoose.model("Person", personSchema);
+module.exports = mongoose.model('Person', personSchema)
